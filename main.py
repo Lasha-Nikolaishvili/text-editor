@@ -9,6 +9,9 @@ class MainMenu(QMainWindow):
         super(MainMenu, self).__init__(parent)
         self.file_dialog = file_dialog
 
+        self.setGeometry(QDesktopWidget().screenGeometry().width()//2 - (QDesktopWidget().screenGeometry().width()//2)//2, QDesktopWidget().screenGeometry().height()//2 - (QDesktopWidget().screenGeometry().height()//2)//2, QDesktopWidget().screenGeometry().width()//2, QDesktopWidget().screenGeometry().height()//2)
+        # self.showFullScreen()
+
         layout = QHBoxLayout()
         bar = self.menuBar()
         file = bar.addMenu("File")
@@ -49,9 +52,9 @@ class MainMenu(QMainWindow):
         elif action_text == "New":
             self.new_file()
         elif action_text == "Copy":
-            pass
+            self.copy_to_clipboard()
         elif action_text == "Paste":
-            pass
+            self.paste_from_clipboard()
         elif action_text == "Quit":
             self.quit_program()
 
@@ -63,6 +66,7 @@ class MainMenu(QMainWindow):
                 self.file_dialog.current_filename = filenames[0]
                 with open(self.file_dialog.current_filename, 'r') as file:
                     data = file.read()
+                    self.file_dialog.contents.setReadOnly(False)
                     self.file_dialog.contents.setPlainText(data)
 
     def save_file(self):
@@ -91,6 +95,7 @@ class MainMenu(QMainWindow):
         if ok and new_filename:
             # Reset the current file information
             self.file_dialog.current_filename = new_filename
+            self.file_dialog.contents.setReadOnly(False)
 
             # Save the new file to the file system
             with open(new_filename, 'w') as file:
@@ -102,10 +107,14 @@ class MainMenu(QMainWindow):
                 self.file_dialog.contents.setPlainText(data)
 
     def copy_to_clipboard(self):
-        pass
+        clipboard = QApplication.clipboard()
+        clipboard.setText(self.file_dialog.contents.toPlainText())
+        QMessageBox.information(self.file_dialog, "Text Copied", "Text has been copied to clipboard.")
 
     def paste_from_clipboard(self):
-        pass
+        clipboard = QApplication.clipboard()
+        previous_text = self.file_dialog.contents.toPlainText()
+        self.file_dialog.contents.setPlainText(previous_text + clipboard.text())
 
     def quit_program(self):
         # Check if there are unsaved changes
@@ -146,6 +155,7 @@ class FileDialog(QWidget):
         layout = QVBoxLayout()
 
         self.contents = QTextEdit()
+        self.contents.setReadOnly(True)
         layout.addWidget(self.contents)
 
         self.setLayout(layout)
